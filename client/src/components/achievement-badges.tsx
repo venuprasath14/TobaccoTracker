@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Heart, DollarSign } from "lucide-react";
-import { Achievement } from "@shared/schema";
+import { type Achievement } from "@/lib/localStorage";
 
 interface AchievementBadgesProps {
   achievements: Achievement[];

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DailyCheckIn } from "@/components/daily-checkin";
 import { ProgressCalendar } from "@/components/progress-calendar";
@@ -6,21 +6,37 @@ import { HealthTimeline } from "@/components/health-timeline";
 import { AchievementBadges } from "@/components/achievement-badges";
 import { getDailyQuote } from "@/lib/motivational-quotes";
 import { getHealthScore } from "@/lib/health-benefits";
+import { storage, type UserStats, type DailyEntry, type Achievement } from "@/lib/localStorage";
 import { Quote } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function Home() {
-  // For demo purposes, using userId = 1
-  const userId = 1;
+interface HomeProps {
+  currentUserId: string;
+  onDataUpdate: () => void;
+}
+
+export default function Home({ currentUserId, onDataUpdate }: HomeProps) {
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const dailyQuote = getDailyQuote();
 
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: [`/api/user/${userId}/dashboard`],
-  });
+  useEffect(() => {
+    loadData();
+  }, [currentUserId]);
 
-  const { data: entries } = useQuery({
-    queryKey: [`/api/user/${userId}/entries`],
-  });
+  const loadData = () => {
+    setIsLoading(true);
+    const stats = storage.getUserStats(currentUserId);
+    const userEntries = storage.getDailyEntries(currentUserId);
+    const achievements = storage.getUserAchievements(currentUserId);
+    
+    setUserStats(stats || null);
+    setEntries(userEntries);
+    setUserAchievements(achievements);
+    setIsLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -44,14 +60,12 @@ export default function Home() {
     );
   }
 
-  const stats = dashboardData?.stats;
-  const achievements = dashboardData?.achievements || [];
-  const todayEntry = entries?.find((entry: any) => 
+  const todayEntry = entries.find(entry => 
     entry.date === new Date().toISOString().split('T')[0]
   );
 
-  const currentStreak = stats?.currentStreak || 0;
-  const moneySaved = parseFloat(stats?.moneySaved || "0");
+  const currentStreak = userStats?.currentStreak || 0;
+  const moneySaved = parseFloat(userStats?.moneySaved || "0");
   const healthScore = getHealthScore(currentStreak);
 
   return (
@@ -65,9 +79,13 @@ export default function Home() {
       
       <main className="px-6 -mt-4 pb-24 space-y-6">
         <DailyCheckIn 
-          userId={userId}
+          currentUserId={currentUserId}
           currentStreak={currentStreak}
           todayEntry={todayEntry}
+          onUpdate={() => {
+            loadData();
+            onDataUpdate();
+          }}
         />
 
         {/* Motivational Quote */}
@@ -109,9 +127,9 @@ export default function Home() {
           </Card>
         </div>
 
-        <AchievementBadges achievements={achievements} />
+        <AchievementBadges achievements={userAchievements} />
 
-        {entries && <ProgressCalendar entries={entries} />}
+        {entries.length > 0 && <ProgressCalendar entries={entries} />}
 
         <HealthTimeline daysTobaccoFree={currentStreak} />
       </main>

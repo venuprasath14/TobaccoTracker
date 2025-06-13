@@ -2,60 +2,69 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { storage, type DailyEntry } from "@/lib/localStorage";
 
 interface DailyCheckInProps {
-  userId: number;
+  currentUserId: string;
   currentStreak: number;
-  todayEntry?: {
-    tobaccoFree: boolean;
-    date: string;
-  };
+  todayEntry?: DailyEntry;
+  onUpdate: () => void;
 }
 
-export function DailyCheckIn({ userId, currentStreak, todayEntry }: DailyCheckInProps) {
+export function DailyCheckIn({ currentUserId, currentStreak, todayEntry, onUpdate }: DailyCheckInProps) {
   const [celebrating, setCelebrating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const checkInMutation = useMutation({
-    mutationFn: async (tobaccoFree: boolean) => {
+  const handleCheckIn = async (tobaccoFree: boolean) => {
+    setIsLoading(true);
+    try {
       const today = new Date().toISOString().split('T')[0];
-      return apiRequest("POST", "/api/daily-entry", {
-        userId,
-        date: today,
-        tobaccoFree
-      });
-    },
-    onSuccess: (_, tobaccoFree) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/dashboard`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/entries`] });
+      storage.createOrUpdateDailyEntry(currentUserId, today, tobaccoFree);
+      
+      // Update user stats
+      storage.updateUserStats(currentUserId);
+      
+      // Check for new achievements
+      const newAchievements = storage.checkAndAwardAchievements(currentUserId);
       
       if (tobaccoFree) {
         setCelebrating(true);
         setTimeout(() => setCelebrating(false), 600);
         toast({
-          title: "Amazing! 🎉",
+          title: "Amazing!",
           description: "You've marked today as tobacco-free! Keep up the great work!",
         });
       } else {
         toast({
-          title: "That's okay 💪",
+          title: "That's okay",
           description: "Tomorrow is a new day. You've got this!",
           variant: "destructive"
         });
       }
-    },
-    onError: () => {
+
+      // Show achievement notifications
+      newAchievements.forEach(achievement => {
+        setTimeout(() => {
+          toast({
+            title: "Achievement Unlocked!",
+            description: achievement.title,
+          });
+        }, 1000);
+      });
+
+      onUpdate();
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save your check-in. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
   const progressPercentage = Math.min((currentStreak / 30) * 100, 100);
   const circumference = 283;
@@ -104,8 +113,8 @@ export function DailyCheckIn({ userId, currentStreak, todayEntry }: DailyCheckIn
           <div className="flex gap-3">
             <Button 
               className={`flex-1 bg-success hover:bg-success/90 text-white font-medium transition-all transform hover:scale-105 active:scale-95 ${celebrating ? 'celebrate' : ''}`}
-              onClick={() => checkInMutation.mutate(true)}
-              disabled={checkInMutation.isPending || (todayEntry?.tobaccoFree === true)}
+              onClick={() => handleCheckIn(true)}
+              disabled={isLoading || (todayEntry?.tobaccoFree === true)}
             >
               <Check className="w-4 h-4 mr-2" />
               Tobacco Free!
@@ -113,8 +122,8 @@ export function DailyCheckIn({ userId, currentStreak, todayEntry }: DailyCheckIn
             <Button 
               variant="outline"
               className="flex-1 hover:bg-gray-100 font-medium transition-all"
-              onClick={() => checkInMutation.mutate(false)}
-              disabled={checkInMutation.isPending || (todayEntry?.tobaccoFree === false)}
+              onClick={() => handleCheckIn(false)}
+              disabled={isLoading || (todayEntry?.tobaccoFree === false)}
             >
               <X className="w-4 h-4 mr-2" />
               Used Today
