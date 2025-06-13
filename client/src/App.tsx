@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { LoginForm } from "@/components/login-form";
-import { BottomNavigation } from "@/components/bottom-navigation";
-import { storage } from "@/lib/localStorage";
-import Home from "@/pages/home";
-import Stats from "@/pages/stats";
-import Goals from "@/pages/goals";
-import Profile from "@/pages/profile";
-import NotFound from "@/pages/not-found";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { LoginForm } from "./components/login-form";
+import { BottomNavigation } from "./components/bottom-navigation";
+import { storage } from "./lib/localStorage";
+import Home from "./pages/home";
+import Stats from "./pages/stats";
+import Goals from "./pages/goals";
+import Profile from "./pages/profile";
+import NotFound from "./pages/not-found";
 
 function AuthenticatedApp({ currentUserId }: { currentUserId: string }) {
   const [refreshKey, setRefreshKey] = useState(0);
