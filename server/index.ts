@@ -1,6 +1,9 @@
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { createRequire } from 'module';
 import path from 'path';
+
+const require = createRequire(import.meta.url);
 
 // Create and start Vite dev server with proper configuration
 async function startServer() {
@@ -16,11 +19,17 @@ async function startServer() {
       },
     },
     root: path.resolve(process.cwd(), "client"),
-    server: {
-      host: '0.0.0.0',
-      port: 5000,
-      strictPort: true,
+    css: {
+      postcss: path.resolve(process.cwd(), "client", "postcss.config.js"),
     },
+    server: {
+      host: true,
+      port: 5000,
+      strictPort: true
+    },
+    define: {
+      global: 'globalThis',
+    }
   });
 
   await server.listen();
