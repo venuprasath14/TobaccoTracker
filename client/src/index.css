@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(248, 50%, 98%);
+  --foreground: hsl(207, 9%, 15%);
+  --muted: hsl(220, 9%, 96%);
+  --muted-foreground: hsl(220, 5%, 45%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(207, 9%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(207, 9%, 15%);
+  --border: hsl(220, 13%, 91%);
+  --input: hsl(220, 13%, 91%);
+  --primary: hsl(151, 83%, 39%);
+  --primary-foreground: hsl(210, 20%, 98%);
+  --secondary: hsl(220, 14%, 96%);
+  --secondary-foreground: hsl(220, 9%, 9%);
+  --accent: hsl(220, 14%, 96%);
+  --accent-foreground: hsl(220, 9%, 9%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 20%, 98%);
+  --ring: hsl(151, 83%, 39%);
+  --radius: 0.75rem;
+  
+  /* Custom TobaccoFree colors */
+  --success: hsl(151, 83%, 39%);
+  --success-light: hsl(151, 83%, 49%);
+  --warning: hsl(43, 96%, 56%);
+  --info: hsl(221, 83%, 53%);
+  --surface: hsl(0, 0%, 100%);
+  --text-primary: hsl(207, 9%, 15%);
+  --text-secondary: hsl(220, 5%, 45%);
+  --gradient-primary: linear-gradient(135deg, hsl(151, 83%, 39%) 0%, hsl(151, 83%, 49%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(221, 83%, 63%) 100%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 4%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 4%, 16%);
+  --muted-foreground: hsl(240, 5%, 65%);
+  --popover: hsl(240, 10%, 4%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 4%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 4%, 16%);
+  --input: hsl(240, 4%, 16%);
+  --primary: hsl(151, 83%, 39%);
+  --primary-foreground: hsl(210, 20%, 98%);
+  --secondary: hsl(240, 4%, 16%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 4%, 16%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 63%, 31%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(151, 83%, 39%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground min-h-screen;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .text-success {
+    color: var(--success);
+  }
+  
+  .bg-success {
+    background-color: var(--success);
+  }
+  
+  .border-success {
+    border-color: var(--success);
+  }
+  
+  .celebrate {
+    animation: celebration 0.6s ease-in-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .progress-ring {
+    transition: stroke-dasharray 0.8s ease-in-out;
+  }
+}
+
+@keyframes celebration {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+  }
+  25% { 
+    transform: scale(1.1) rotate(5deg); 
+  }
+  75% { 
+    transform: scale(1.1) rotate(-5deg); 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes progressFill {
+  from { 
+    stroke-dasharray: 0 283; 
+  }
+  to { 
+    stroke-dasharray: var(--progress) 283; 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
