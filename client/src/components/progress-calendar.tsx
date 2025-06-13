@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Check, X } from "lucide-react";
-import { DailyEntry } from "@shared/schema";
+import { type DailyEntry } from "@/lib/localStorage";
 
 interface ProgressCalendarProps {
   entries: DailyEntry[];

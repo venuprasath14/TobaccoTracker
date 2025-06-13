@@ -1,18 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar, Award, DollarSign, Clock, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { storage, type UserStats, type DailyEntry, type Achievement } from "@/lib/localStorage";
 
-export default function Stats() {
-  const userId = 1;
+interface StatsProps {
+  currentUserId: string;
+}
 
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: [`/api/user/${userId}/dashboard`],
-  });
+export default function Stats({ currentUserId }: StatsProps) {
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: entries } = useQuery({
-    queryKey: [`/api/user/${userId}/entries`, { days: 90 }],
-  });
+  useEffect(() => {
+    loadData();
+  }, [currentUserId]);
+
+  const loadData = () => {
+    setIsLoading(true);
+    const stats = storage.getUserStats(currentUserId);
+    const userEntries = storage.getDailyEntries(currentUserId);
+    const achievements = storage.getUserAchievements(currentUserId);
+    
+    setUserStats(stats || null);
+    setEntries(userEntries);
+    setUserAchievements(achievements);
+    setIsLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -31,23 +47,21 @@ export default function Stats() {
     );
   }
 
-  const stats = dashboardData?.stats;
-  const achievements = dashboardData?.achievements || [];
   const allEntries = entries || [];
   
-  const currentStreak = stats?.currentStreak || 0;
-  const longestStreak = stats?.longestStreak || 0;
-  const totalTobaccoFreeDays = stats?.totalTobaccoFreeDays || 0;
-  const moneySaved = parseFloat(stats?.moneySaved || "0");
+  const currentStreak = userStats?.currentStreak || 0;
+  const longestStreak = userStats?.longestStreak || 0;
+  const totalTobaccoFreeDays = userStats?.totalTobaccoFreeDays || 0;
+  const moneySaved = parseFloat(userStats?.moneySaved || "0");
   
   // Calculate weekly averages
   const last7Days = allEntries.slice(0, 7);
-  const tobaccoFreeLast7Days = last7Days.filter((entry: any) => entry.tobaccoFree).length;
+  const tobaccoFreeLast7Days = last7Days.filter(entry => entry.tobaccoFree).length;
   const weeklySuccessRate = last7Days.length > 0 ? (tobaccoFreeLast7Days / last7Days.length) * 100 : 0;
   
   // Calculate monthly stats
   const last30Days = allEntries.slice(0, 30);
-  const tobaccoFreeLast30Days = last30Days.filter((entry: any) => entry.tobaccoFree).length;
+  const tobaccoFreeLast30Days = last30Days.filter(entry => entry.tobaccoFree).length;
   const monthlySuccessRate = last30Days.length > 0 ? (tobaccoFreeLast30Days / last30Days.length) * 100 : 0;
 
   // Calculate time since quit (days since first entry)
@@ -167,12 +181,12 @@ export default function Stats() {
           <CardContent>
             <div className="text-center">
               <div className="text-3xl font-bold text-yellow-500 mb-2">
-                {achievements.length}
+                {userAchievements.length}
               </div>
               <div className="text-muted-foreground">
-                {achievements.length === 1 ? 'Achievement Unlocked' : 'Achievements Unlocked'}
+                {userAchievements.length === 1 ? 'Achievement Unlocked' : 'Achievements Unlocked'}
               </div>
-              {achievements.length === 0 && (
+              {userAchievements.length === 0 && (
                 <p className="text-sm text-muted-foreground mt-2">
                   Keep going! Your first achievement is coming soon.
                 </p>

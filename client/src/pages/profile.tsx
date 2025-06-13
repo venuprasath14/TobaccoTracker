@@ -1,21 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Heart, Calendar, Trophy, TrendingUp, Share } from "lucide-react";
+import { User, Settings, Heart, Calendar, Trophy, TrendingUp, Share, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { storage, type UserStats, type DailyEntry, type Achievement } from "@/lib/localStorage";
 
-export default function Profile() {
-  const userId = 1;
+interface ProfileProps {
+  currentUserId: string;
+  onLogout: () => void;
+}
+
+export default function Profile({ currentUserId, onLogout }: ProfileProps) {
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: [`/api/user/${userId}/dashboard`],
-  });
+  useEffect(() => {
+    loadData();
+  }, [currentUserId]);
 
-  const { data: entries } = useQuery({
-    queryKey: [`/api/user/${userId}/entries`],
-  });
+  const loadData = () => {
+    setIsLoading(true);
+    const stats = storage.getUserStats(currentUserId);
+    const userEntries = storage.getDailyEntries(currentUserId);
+    const achievements = storage.getUserAchievements(currentUserId);
+    
+    setUserStats(stats || null);
+    setEntries(userEntries);
+    setUserAchievements(achievements);
+    setIsLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -34,15 +51,11 @@ export default function Profile() {
     );
   }
 
-  const stats = dashboardData?.stats;
-  const achievements = dashboardData?.achievements || [];
-  const allEntries = entries || [];
-  
-  const currentStreak = stats?.currentStreak || 0;
-  const longestStreak = stats?.longestStreak || 0;
-  const totalTobaccoFreeDays = stats?.totalTobaccoFreeDays || 0;
-  const moneySaved = parseFloat(stats?.moneySaved || "0");
-  const startDate = stats?.startDate || new Date().toISOString().split('T')[0];
+  const currentStreak = userStats?.currentStreak || 0;
+  const longestStreak = userStats?.longestStreak || 0;
+  const totalTobaccoFreeDays = userStats?.totalTobaccoFreeDays || 0;
+  const moneySaved = parseFloat(userStats?.moneySaved || "0");
+  const startDate = userStats?.startDate || new Date().toISOString().split('T')[0];
   
   // Calculate journey duration
   const journeyStart = new Date(startDate);
@@ -50,7 +63,7 @@ export default function Profile() {
   const journeyDays = Math.floor((today.getTime() - journeyStart.getTime()) / (1000 * 60 * 60 * 24));
   
   const handleShare = async () => {
-    const shareText = `I've been tobacco-free for ${currentStreak} days and saved $${moneySaved.toFixed(2)}! 🎉 #TobaccoFree #HealthyLiving`;
+    const shareText = `I've been tobacco-free for ${currentStreak} days and saved $${moneySaved.toFixed(2)}! #TobaccoFree #HealthyLiving`;
     
     if (navigator.share) {
       try {
@@ -59,7 +72,6 @@ export default function Profile() {
           text: shareText,
         });
       } catch (error) {
-        // Fallback to clipboard
         navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to clipboard!",
@@ -73,6 +85,11 @@ export default function Profile() {
         description: "Share your progress with friends and family.",
       });
     }
+  };
+
+  const handleLogout = () => {
+    storage.logout();
+    onLogout();
   };
 
   return (
@@ -168,13 +185,13 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-              Achievements ({achievements.length})
+              Achievements ({userAchievements.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {achievements.length > 0 ? (
+            {userAchievements.length > 0 ? (
               <div className="space-y-3">
-                {achievements.slice(0, 3).map((achievement: any) => (
+                {userAchievements.slice(0, 3).map((achievement) => (
                   <div key={achievement.id} className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
                     <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
                       <Trophy className="w-4 h-4 text-white" />
@@ -185,9 +202,9 @@ export default function Profile() {
                     </div>
                   </div>
                 ))}
-                {achievements.length > 3 && (
+                {userAchievements.length > 3 && (
                   <div className="text-center text-sm text-muted-foreground">
-                    +{achievements.length - 3} more achievements
+                    +{userAchievements.length - 3} more achievements
                   </div>
                 )}
               </div>
@@ -236,12 +253,12 @@ export default function Profile() {
           </Button>
           
           <Button 
+            onClick={handleLogout}
             variant="outline" 
             className="w-full"
-            onClick={() => toast({ title: "Settings", description: "Settings page coming soon!" })}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
           </Button>
         </div>
 

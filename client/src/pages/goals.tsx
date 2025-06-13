@@ -1,20 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Target, Calendar, Star, Medal, Heart, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { storage, type UserStats, type Achievement } from "@/lib/localStorage";
 
-export default function Goals() {
-  const userId = 1;
+interface GoalsProps {
+  currentUserId: string;
+}
 
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: [`/api/user/${userId}/dashboard`],
-  });
+export default function Goals({ currentUserId }: GoalsProps) {
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: allAchievements } = useQuery({
-    queryKey: [`/api/user/${userId}/achievements`],
-  });
+  useEffect(() => {
+    loadData();
+  }, [currentUserId]);
+
+  const loadData = () => {
+    setIsLoading(true);
+    const stats = storage.getUserStats(currentUserId);
+    const achievements = storage.getUserAchievements(currentUserId);
+    
+    setUserStats(stats || null);
+    setUserAchievements(achievements);
+    setIsLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -33,11 +46,9 @@ export default function Goals() {
     );
   }
 
-  const stats = dashboardData?.stats;
-  const currentStreak = stats?.currentStreak || 0;
-  const totalTobaccoFreeDays = stats?.totalTobaccoFreeDays || 0;
-  const moneySaved = parseFloat(stats?.moneySaved || "0");
-  const achievements = allAchievements || [];
+  const currentStreak = userStats?.currentStreak || 0;
+  const totalTobaccoFreeDays = userStats?.totalTobaccoFreeDays || 0;
+  const moneySaved = parseFloat(userStats?.moneySaved || "0");
 
   // Define goal milestones
   const streakGoals = [
@@ -64,7 +75,7 @@ export default function Goals() {
   };
 
   const hasAchievement = (type: string, value: number) => {
-    return achievements.some((achievement: any) => 
+    return userAchievements.some(achievement => 
       achievement.type === type && achievement.value === value
     );
   };
@@ -173,11 +184,7 @@ export default function Goals() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         achieved ? 'bg-green-500' : isNext ? 'bg-yellow-500' : 'bg-gray-200'
                       }`}>
-                        {achieved ? (
-                          <DollarSign className="w-4 h-4 text-white" />
-                        ) : (
-                          <DollarSign className={`w-4 h-4 ${isNext ? 'text-white' : 'text-gray-500'}`} />
-                        )}
+                        <DollarSign className={`w-4 h-4 ${achieved || isNext ? 'text-white' : 'text-gray-500'}`} />
                       </div>
                       <div>
                         <div className="font-medium">{goal.title}</div>
@@ -246,13 +253,13 @@ export default function Goals() {
           <CardContent>
             <div className="text-center">
               <div className="text-4xl font-bold text-yellow-500 mb-2">
-                {achievements.length}
+                {userAchievements.length}
               </div>
               <div className="text-lg font-semibold mb-2">
-                {achievements.length === 1 ? 'Achievement Unlocked' : 'Achievements Unlocked'}
+                {userAchievements.length === 1 ? 'Achievement Unlocked' : 'Achievements Unlocked'}
               </div>
               <div className="text-muted-foreground">
-                {achievements.length === 0 
+                {userAchievements.length === 0 
                   ? "Start your journey to unlock your first achievement!"
                   : "Keep going to unlock more achievements!"
                 }
