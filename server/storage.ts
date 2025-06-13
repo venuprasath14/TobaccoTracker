@@ -55,6 +55,78 @@ export class MemStorage implements IStorage {
     this.currentEntryId = 1;
     this.currentAchievementId = 1;
     this.currentStatsId = 1;
+    
+    // Initialize with demo user and data
+    this.initializeDemoData();
+  }
+
+  private initializeDemoData() {
+    // Create demo user
+    const demoUser: User = {
+      id: 1,
+      username: "demo",
+      password: "demo",
+      createdAt: "2024-12-01"
+    };
+    this.users.set(1, demoUser);
+    this.currentUserId = 2;
+
+    // Create user stats
+    const userStats: UserStats = {
+      id: 1,
+      userId: 1,
+      currentStreak: 5,
+      longestStreak: 7,
+      totalTobaccoFreeDays: 12,
+      moneySaved: "120.00",
+      startDate: "2024-12-01"
+    };
+    this.userStats.set(1, userStats);
+    this.currentStatsId = 2;
+
+    // Create some daily entries
+    const today = new Date();
+    for (let i = 4; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const entry: DailyEntry = {
+        id: this.currentEntryId++,
+        userId: 1,
+        date: dateStr,
+        tobaccoFree: true,
+        createdAt: dateStr
+      };
+      this.dailyEntries.set(`1-${dateStr}`, entry);
+    }
+
+    // Add some achievements
+    const achievements = [
+      {
+        id: 1,
+        userId: 1,
+        type: "streak_milestone",
+        value: 1,
+        title: "First Day Strong!",
+        description: "Completed 1 tobacco-free day in a row",
+        unlockedAt: "2024-12-01"
+      },
+      {
+        id: 2,
+        userId: 1,
+        type: "streak_milestone", 
+        value: 3,
+        title: "3 Days Strong!",
+        description: "Completed 3 tobacco-free days in a row",
+        unlockedAt: "2024-12-03"
+      }
+    ];
+
+    achievements.forEach(achievement => {
+      this.achievements.set(achievement.id, achievement);
+    });
+    this.currentAchievementId = 3;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -133,7 +205,15 @@ export class MemStorage implements IStorage {
 
   async createUserStats(stats: InsertUserStats): Promise<UserStats> {
     const id = this.currentStatsId++;
-    const userStats: UserStats = { ...stats, id };
+    const userStats: UserStats = { 
+      id,
+      userId: stats.userId,
+      currentStreak: stats.currentStreak ?? 0,
+      longestStreak: stats.longestStreak ?? 0,
+      totalTobaccoFreeDays: stats.totalTobaccoFreeDays ?? 0,
+      moneySaved: stats.moneySaved ?? "0.00",
+      startDate: stats.startDate ?? new Date().toISOString().split('T')[0]
+    };
     this.userStats.set(id, userStats);
     return userStats;
   }
@@ -144,7 +224,15 @@ export class MemStorage implements IStorage {
       throw new Error("User stats not found");
     }
     
-    const updated = { ...existing, ...updates };
+    const updated: UserStats = { 
+      ...existing, 
+      ...updates,
+      currentStreak: updates.currentStreak ?? existing.currentStreak,
+      longestStreak: updates.longestStreak ?? existing.longestStreak,
+      totalTobaccoFreeDays: updates.totalTobaccoFreeDays ?? existing.totalTobaccoFreeDays,
+      moneySaved: updates.moneySaved ?? existing.moneySaved,
+      startDate: updates.startDate ?? existing.startDate
+    };
     this.userStats.set(existing.id, updated);
     return updated;
   }

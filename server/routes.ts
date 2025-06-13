@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Check streak milestones
     for (const value of achievementTypes[0].values) {
-      if (stats.currentStreak >= value && !await storage.hasAchievement(userId, "streak_milestone", value)) {
+      if ((stats.currentStreak || 0) >= value && !await storage.hasAchievement(userId, "streak_milestone", value)) {
         await storage.createAchievement({
           userId,
           type: "streak_milestone",
@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     // Check money milestones
-    const moneySavedNum = parseFloat(stats.moneySaved);
+    const moneySavedNum = parseFloat(stats.moneySaved || "0");
     for (const value of achievementTypes[1].values) {
       if (moneySavedNum >= value && !await storage.hasAchievement(userId, "money_milestone", value)) {
         await storage.createAchievement({

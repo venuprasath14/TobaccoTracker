@@ -4,7 +4,8 @@ import { DailyCheckIn } from "@/components/daily-checkin";
 import { ProgressCalendar } from "@/components/progress-calendar";
 import { HealthTimeline } from "@/components/health-timeline";
 import { AchievementBadges } from "@/components/achievement-badges";
-import { getDailyQuote, getHealthScore } from "@/lib/motivational-quotes";
+import { getDailyQuote } from "@/lib/motivational-quotes";
+import { getHealthScore } from "@/lib/health-benefits";
 import { Quote } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
