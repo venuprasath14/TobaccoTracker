@@ -1,13 +1,10 @@
 import { execSync } from 'child_process';
-import path from 'path';
 
-// Start the React app from client directory
-const clientPath = path.join(process.cwd(), 'client');
+// Start the React app using the root vite config on port 5000
 console.log('Starting React development server...');
 
 try {
-  execSync('npx vite --host 0.0.0.0 --port 3000', { 
-    cwd: clientPath, 
+  execSync('npx vite --host 0.0.0.0 --port 5000', { 
     stdio: 'inherit' 
   });
 } catch (error) {
