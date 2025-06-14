@@ -1,5 +1,5 @@
 {
-  "name": "rest-express",
+  "name": "tobaccofree",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -11,6 +11,9 @@
     "check": "tsc"
   },
   "dependencies": {
+    "@capacitor/android": "^7.3.0",
+    "@capacitor/cli": "^7.3.0",
+    "@capacitor/core": "^7.3.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
